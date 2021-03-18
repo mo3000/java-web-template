@@ -3,6 +3,7 @@ package com.toy.artifact.db.service;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import com.toy.artifact.db.entity.Admins;
 import com.toy.artifact.db.entity.QAdminRole;
 import com.toy.artifact.db.entity.QAdmins;
 import com.toy.artifact.db.entity.QRoles;
@@ -10,6 +11,7 @@ import com.toy.artifact.db.vo.AdminVo;
 import com.toy.artifact.db.vo.RolesVo;
 import com.toy.artifact.utils.Paginator;
 import com.toy.artifact.utils.QueryBuilder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -35,6 +37,24 @@ public class AdminService {
         vo.setStatus(v.get(admins.status));
         vo.setUsername(v.get(admins.username));
         return vo;
+    }
+
+    public Admins findByUsername(String username) {
+        QAdmins admins = QAdmins.admins;
+        var obj = queryFactory.select(admins.id, admins.username, admins.password,
+         admins.createdAt, admins.status)
+            .where(admins.username.eq(username))
+            .fetchOne();
+        if (obj == null) {
+            throw new UsernameNotFoundException(String.format("用户名: %s 不存在", username));
+        }
+        var user = new Admins();
+        user.setId(obj.get(admins.id));
+        user.setPassword(obj.get(admins.password));
+        user.setStatus(obj.get(admins.status));
+        user.setCreatedAt(obj.get(admins.createdAt));
+        user.setUsername(username);
+        return user;
     }
 
     public QueryBuilder admins() {
