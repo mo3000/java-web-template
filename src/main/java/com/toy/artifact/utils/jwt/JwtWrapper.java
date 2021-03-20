@@ -46,4 +46,8 @@ public class JwtWrapper {
         }
         return claim.asLong();
     }
+
+    public boolean isTokenSet() {
+        return ! token.getClaim("userid").isNull();
+    }
 }

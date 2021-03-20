@@ -39,7 +39,7 @@ public class AdminService {
         return vo;
     }
 
-    public Admins findByUsername(String username) {
+    public Admins fetchLoginCredential(String username) {
         QAdmins admins = QAdmins.admins;
         var obj = queryFactory.select(admins.id, admins.username, admins.password,
          admins.createdAt, admins.status)
@@ -54,6 +54,36 @@ public class AdminService {
         user.setStatus(obj.get(admins.status));
         user.setCreatedAt(obj.get(admins.createdAt));
         user.setUsername(username);
+        return user;
+    }
+
+    public AdminVo findById(Long id) {
+        QAdmins admins = QAdmins.admins;
+        QRoles rolesTable = QRoles.roles;
+        var obj = queryFactory.select(admins.id, admins.username,
+            admins.createdAt, admins.status)
+            .where(admins.id.eq(id))
+            .fetchOne();
+        if (obj == null) {
+            throw new UsernameNotFoundException("用户不存在, id: " + id);
+        }
+        var user = new AdminVo();
+        user.setId(id);
+        user.setStatus(obj.get(admins.status));
+        user.setUsername(obj.get(admins.username));
+        QAdminRole adminRole = QAdminRole.adminRole;
+        List<RolesVo> roleList = new ArrayList<>();
+        queryFactory.select(rolesTable.id, rolesTable.name)
+            .from(rolesTable)
+            .rightJoin(adminRole)
+            .on(rolesTable.id.eq(adminRole.roleid))
+            .where(adminRole.adminid.eq(id))
+            .fetch()
+            .forEach(v -> {
+                RolesVo vo = new RolesVo(v.get(rolesTable.id), v.get(rolesTable.name));
+                roleList.add(vo);
+            });
+        user.setRoles(roleList);
         return user;
     }
 

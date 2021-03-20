@@ -14,10 +14,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+
+@RequestMapping("/admin")
+@RestController
 public class AdminController {
 
     private final AdminService adminService;
@@ -33,7 +37,7 @@ public class AdminController {
         logger = LoggerFactory.getLogger(getClass());
     }
 
-    @RequestMapping("test")
+    @RequestMapping("/test")
     public String test(@RequestParam Long userid,
                        @RequestParam(required = false) String name) {
 //        String token = JWT.create()
@@ -69,7 +73,7 @@ public class AdminController {
         return result;
     }
 
-    @RequestMapping("with-roles")
+    @RequestMapping("/with-roles")
     public JsonResp<Paginator<AdminVo>> withRoles(@RequestParam(required = false) String wala,
                                                   @RequestParam(required = false) Long bigid,
                                                   @RequestParam(required = false) String[] names,
