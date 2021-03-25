@@ -5,6 +5,7 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.toy.artifact.utils.jwt.JwtWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -26,6 +27,9 @@ public class AdminCredentialFilter implements Filter {
     private final JwtWrapper jwtWrapper;
     public static String BearerTokenPrefix = "Bearer ";
 
+    @Value("${app.admin.jwt.enableTestUserid:false}")
+    private boolean enableTestUserid;
+
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         logger = LoggerFactory.getLogger(getClass());
@@ -41,11 +45,11 @@ public class AdminCredentialFilter implements Filter {
         var resp = (HttpServletResponse) servletResponse;
         String uri = req.getRequestURI();
         String authHeader = req.getHeader("Authorization");
-        if (! excludes.contains(uri)
+        if (!enableTestUserid && !excludes.contains(uri)
             && (authHeader == null
                 || ! authHeader.startsWith(BearerTokenPrefix)
-                || authHeader.length() < 100)
-                || ! canDecode(authHeader.substring(BearerTokenPrefix.length() - 1))) {
+                || authHeader.length() < 100
+                || ! canDecode(authHeader.substring(BearerTokenPrefix.length() - 1)))) {
             try (var writer = servletResponse.getWriter()) {
                 resp.setStatus(HttpStatus.UNAUTHORIZED.value());
                 writer.write("UNAUTHORIZED");

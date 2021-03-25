@@ -3,29 +3,36 @@ package com.toy.artifact.db.service;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.toy.artifact.db.entity.Admins;
-import com.toy.artifact.db.entity.QAdminRole;
-import com.toy.artifact.db.entity.QAdmins;
-import com.toy.artifact.db.entity.QRoles;
+import com.toy.artifact.db.composedkey.AdminRoleId;
+import com.toy.artifact.db.entity.*;
+import com.toy.artifact.db.repo.AdminRepo;
+import com.toy.artifact.db.repo.AdminRoleRepo;
 import com.toy.artifact.db.vo.AdminVo;
 import com.toy.artifact.db.vo.RolesVo;
 import com.toy.artifact.utils.Paginator;
+import com.toy.artifact.utils.PasswordUtil;
 import com.toy.artifact.utils.QueryBuilder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class AdminService {
 
     private final JPAQueryFactory queryFactory;
+    private final AdminRepo adminRepo;
+    private final AdminRoleRepo adminRoleRepo;
 
-    public AdminService(JPAQueryFactory jpaQueryFactory) {
+    public AdminService(JPAQueryFactory jpaQueryFactory,
+                        AdminRepo adminRepo,
+                        AdminRoleRepo adminRoleRepo) {
         this.queryFactory = jpaQueryFactory;
+        this.adminRepo = adminRepo;
+
+        this.adminRoleRepo = adminRoleRepo;
     }
 
     public AdminVo adminTupleToVo(Tuple v) {
@@ -56,6 +63,60 @@ public class AdminService {
         user.setUsername(username);
         return user;
     }
+
+    @Transactional
+    public Long create(String username, String realname, String password,
+                       final List<Long> rolesid) {
+        if (adminRepo.existsByUsername(username)) {
+            throw new RuntimeException("用户名已存在");
+        }
+        Admins admin = new Admins();
+        admin.setUsername(username);
+        admin.setStatus(0);
+        admin.setCreatedAt(LocalDateTime.now());
+        admin.setPassword(new PasswordUtil().encode(password));
+        admin.setRealname(realname);
+        var newadmin = adminRepo.save(admin);
+        List<AdminRole> adminRoleEntities = new ArrayList<>();
+        rolesid.forEach(v -> {
+            var adminRole = new AdminRole(newadmin.getId(), v);
+            adminRoleEntities.add(adminRole);
+        });
+        adminRoleRepo.saveAll(adminRoleEntities);
+        return newadmin.getId();
+    }
+
+    @Transactional
+    public void updateRole(Long adminid, List<Long> roles) {
+        QAdminRole qAdminRole = QAdminRole.adminRole;
+        Set<Long> oldRoles = new HashSet<>(
+            queryFactory.select(qAdminRole.roleid)
+            .from(qAdminRole)
+            .where(qAdminRole.adminid.eq(adminid))
+            .fetch());
+        Set<Long> delete = new HashSet<>(oldRoles);
+        delete.removeAll(roles);
+        adminRoleRepo.deleteAll(adminid, delete);
+        Set<Long> add = new HashSet<>(roles);
+        add.removeAll(oldRoles);
+        List<AdminRole> saveData = new ArrayList<>();
+        add.forEach(v -> saveData.add(new AdminRole(adminid, v)));
+        adminRoleRepo.saveAll(saveData);
+    }
+
+    @Transactional
+    public void update(Long id, String realname, List<Long> rolesid) {
+        var admin = adminRepo.findById(id);
+        if (admin.isEmpty()) {
+            throw new RuntimeException("用户不存在, id: " + id);
+        }
+        admin.ifPresent(v -> {
+            v.setRealname(realname);
+            adminRepo.save(v);
+            updateRole(id, rolesid);
+        });
+    }
+
 
     public AdminVo findById(Long id) {
         QAdmins admins = QAdmins.admins;

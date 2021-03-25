@@ -16,6 +16,12 @@ public class JwtWrapper {
     @Value("${app.admin.jwt.key}")
     private String secret;
 
+    @Value("${app.admin.jwt.enableTestUserid:false}")
+    private boolean enableTestUserid;
+
+    @Value("${app.admin.jwt.testUserid:1}")
+    private long testUserid;
+
     private DecodedJWT token;
 
     public String sign(Long userid) {
@@ -35,11 +41,10 @@ public class JwtWrapper {
         token = verifier.verify(jwtToken);
     }
 
-    public DecodedJWT getToken() {
-        return token;
-    }
-
     public Long getUserid() {
+        if (enableTestUserid) {
+            return testUserid;
+        }
         var claim = token.getClaim("userid");
         if (claim.isNull()) {
             throw new RuntimeException("jwt token doesn't have userid");
@@ -48,6 +53,6 @@ public class JwtWrapper {
     }
 
     public boolean isTokenSet() {
-        return ! token.getClaim("userid").isNull();
+        return enableTestUserid || !token.getClaim("userid").isNull();
     }
 }

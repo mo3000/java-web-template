@@ -4,5 +4,15 @@
       "name": "app.admin.jwt.key",
       "type": "java.lang.String",
       "description": "Description for app.admin.jwt.key."
+    },
+    {
+      "name": "app.admin.jwt.enableTestUserid",
+      "type": "java.lang.Boolean",
+      "description": "skip login and set userid default to 1."
+    },
+    {
+      "name": "app.admin.jwt.testUserid",
+      "type": "java.lang.Long",
+      "description": "login user id for test only."
     }
   ] }

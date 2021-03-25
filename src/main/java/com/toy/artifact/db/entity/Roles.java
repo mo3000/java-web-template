@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Entity
 public class Roles {
     @Id()
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     public void setId(Long id) {

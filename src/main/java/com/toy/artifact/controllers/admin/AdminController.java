@@ -6,6 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.toy.artifact.db.entity.*;
 import com.toy.artifact.db.service.AdminService;
 import com.toy.artifact.db.vo.AdminVo;
+import com.toy.artifact.utils.RespFormat.JsonError;
 import com.toy.artifact.utils.jwt.JwtWrapper;
 import com.toy.artifact.utils.Paginator;
 import com.toy.artifact.utils.RespFormat.JsonOk;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import static com.toy.artifact.utils.ExceptionWriter.dump;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -83,6 +85,26 @@ public class AdminController {
             .paginate(page)
             .map(adminService::adminTupleToVo);
         return new JsonOk<>(query);
+    }
+
+    @RequestMapping("/edit")
+    public JsonResp<Object> edit(@RequestParam String username,
+                                   @RequestParam String realname,
+                                   @RequestParam String password,
+                                   @RequestParam(required = false) Long id,
+                                   @RequestParam List<Long> roles) {
+
+        try {
+            if (id == null) {
+                adminService.create(username, realname, password, roles);
+            } else {
+                adminService.update(id, realname, roles);
+            }
+        } catch (RuntimeException e) {
+            logger.error(dump(e));
+            return new JsonError<>(e.getMessage());
+        }
+        return new JsonOk<>(null);
     }
 
 }
