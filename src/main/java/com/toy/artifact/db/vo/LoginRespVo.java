@@ -1,9 +1,20 @@
 package com.toy.artifact.db.vo;
 
+import java.util.List;
+
 public class LoginRespVo {
 
     private String token;
     private String username;
+    private List<String> roles;
+
+    public List<String> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<String> roles) {
+        this.roles = roles;
+    }
 
     public String getToken() {
         return token;

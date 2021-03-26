@@ -47,21 +47,22 @@ public class AdminService {
     }
 
     public Admins fetchLoginCredential(String username) {
-        QAdmins admins = QAdmins.admins;
-        var obj = queryFactory.select(admins.id, admins.username, admins.password,
-         admins.createdAt, admins.status)
-            .where(admins.username.eq(username))
-            .fetchOne();
-        if (obj == null) {
-            throw new UsernameNotFoundException(String.format("用户名: %s 不存在", username));
+        var admin = adminRepo.findByUsername(username);
+        if (admin == null) {
+            throw new RuntimeException("用户不存在");
         }
-        var user = new Admins();
-        user.setId(obj.get(admins.id));
-        user.setPassword(obj.get(admins.password));
-        user.setStatus(obj.get(admins.status));
-        user.setCreatedAt(obj.get(admins.createdAt));
-        user.setUsername(username);
-        return user;
+        return admin;
+    }
+
+    public List<String> fetchAdminRoleName(Long adminid) {
+        QAdminRole qAdminRole = QAdminRole.adminRole;
+        QRoles qRoles = QRoles.roles;
+        return queryFactory.select(qRoles.name)
+            .from(qRoles)
+            .rightJoin(qAdminRole)
+            .on(qRoles.id.eq(qAdminRole.roleid))
+            .where(qAdminRole.adminid.eq(adminid))
+            .fetch();
     }
 
     @Transactional
