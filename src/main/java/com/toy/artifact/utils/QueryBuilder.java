@@ -36,7 +36,7 @@ public class QueryBuilder {
     public Paginator<Tuple> paginate(long page, int pageSize) {
         long total = query.fetchCount();
         List<Tuple> data = query.limit(pageSize)
-            .offset((page - 1) * pageSize)
+            .offset(page * pageSize)
             .fetch();
         return new Paginator<>(data, total, page, pageSize);
     }

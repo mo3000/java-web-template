@@ -3,7 +3,6 @@ package com.toy.artifact.db.service;
 import com.querydsl.core.Tuple;
 import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.toy.artifact.db.composedkey.AdminRoleId;
 import com.toy.artifact.db.entity.*;
 import com.toy.artifact.db.repo.AdminRepo;
 import com.toy.artifact.db.repo.AdminRoleRepo;
@@ -44,6 +43,11 @@ public class AdminService {
         vo.setStatus(v.get(admins.status));
         vo.setUsername(v.get(admins.username));
         return vo;
+    }
+
+    @Transactional
+    public void toggleStatus(Long id) {
+        adminRepo.toggleStatus(id);
     }
 
     public Admins fetchLoginCredential(String username) {
