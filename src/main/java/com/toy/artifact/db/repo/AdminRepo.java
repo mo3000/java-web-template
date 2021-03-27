@@ -15,4 +15,8 @@ public interface AdminRepo extends CrudRepository<Admins, Long> {
     @Modifying
     @Query(value = "update Admins set status=(status+1) % 2 where id=:id")
     public void toggleStatus(Long id);
+
+    @Modifying
+    @Query(value = "update Admins set password=:password where id=:id")
+    public void resetPassword(Long id, String password);
 }

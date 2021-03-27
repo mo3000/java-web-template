@@ -6,6 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.toy.artifact.db.entity.*;
 import com.toy.artifact.db.service.AdminService;
 import com.toy.artifact.db.vo.AdminVo;
+import com.toy.artifact.request.admin.admin.AdminEditRequest;
 import com.toy.artifact.request.admin.admin.AdminListRequest;
 import com.toy.artifact.request.admin.admin.ToggleStatusRequest;
 import com.toy.artifact.utils.RespFormat.JsonError;
@@ -56,52 +57,15 @@ public class AdminController {
     }
 
 
-
-    @RequestMapping
-    public List<Admins> index() {
-        QAdmins admins = QAdmins.admins;
-        List<Admins> result = queryFactory.selectFrom(admins)
-            .orderBy(admins.createdAt.desc())
-            .fetch();
-        var mapper = new ObjectMapper();
-        var str = result.stream()
-            .map(v -> {
-                try {
-                    return mapper.writeValueAsString(v);
-                } catch (JsonProcessingException e) {
-                    return "";
-                }
-            })
-            .collect(Collectors.joining("\n"));
-        logger.info("beng da hei ya");
-
-        return result;
-    }
-
-    @RequestMapping("/with-roles")
-    public JsonResp<Paginator<AdminVo>> withRoles(@RequestParam(required = false) String wala,
-                                                  @RequestParam(required = false) Long bigid,
-                                                  @RequestParam(required = false) String[] names,
-                                                  @RequestParam(required = false) String day,
-                                                  @RequestParam(required = false, defaultValue = "1") Long page) {
-        var query = adminService.admins()
-            .paginate(page)
-            .map(adminService::adminTupleToVo);
-        return new JsonOk<>(query);
-    }
-
-    @RequestMapping("/edit")
-    public JsonResp<Object> edit(@RequestParam String username,
-                                   @RequestParam String realname,
-                                   @RequestParam String password,
-                                   @RequestParam(required = false) Long id,
-                                   @RequestParam List<Long> roles) {
+    @RequestMapping("/admin/edit")
+    public JsonResp<Object> edit(@RequestBody AdminEditRequest request) {
 
         try {
-            if (id == null) {
-                adminService.create(username, realname, password, roles);
+            var roleids = adminService.rolenameToId(request.getRoles());
+            if (request.getId() == null) {
+                adminService.create(request.getUsername(), request.getRealname(), request.getPassword(), roleids);
             } else {
-                adminService.update(id, realname, roles);
+                adminService.update(request.getId(), request.getRealname(), roleids);
             }
         } catch (RuntimeException e) {
             logger.error(dump(e));
@@ -129,6 +93,12 @@ public class AdminController {
     @RequestMapping("/admin/toggle-status")
     public JsonResp<Object> toggleStatus(@RequestBody ToggleStatusRequest req) {
         adminService.toggleStatus(req.getId());
+        return new JsonOk<>(null);
+    }
+
+    @RequestMapping("/admin/reset-password")
+    public JsonResp<Object> resetPassword(@RequestBody ToggleStatusRequest req) {
+        adminService.resetPassword(req.getId());
         return new JsonOk<>(null);
     }
 }

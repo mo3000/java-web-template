@@ -69,6 +69,20 @@ public class AdminService {
             .fetch();
     }
 
+    public List<Long> rolenameToId(List<String> names) {
+        QRoles qRoles = QRoles.roles;
+        return queryFactory.select(qRoles.id)
+            .from(qRoles)
+            .where(qRoles.name.in(names))
+            .fetch();
+    }
+
+    @Transactional
+    public void resetPassword(Long id) {
+        String password = new PasswordUtil().encode("123456");
+        adminRepo.resetPassword(id, password);
+    }
+
     @Transactional
     public Long create(String username, String realname, String password,
                        final List<Long> rolesid) {
@@ -178,20 +192,22 @@ public class AdminService {
 
         return admins.fill(keys -> {
             Map<Long, List<RolesVo>> rolesMap = new HashMap<>();
-            var query = queryFactory.select(rolesTable.id, rolesTable.name, adminsTable.id)
+            var query = queryFactory.select(rolesTable.id, rolesTable.name,
+                rolesTable.displayName, adminsTable.id)
                 .from(adminsTable);
             queryWithRoles(query)
                 .where(adminsTable.id.in(keys))
                 .fetch()
                 .forEach(r -> {
                     var id = r.get(adminsTable.id);
+                    var vo = new RolesVo(
+                        r.get(rolesTable.id), r.get(rolesTable.name));
+                    vo.setDisplay_name(r.get(rolesTable.displayName));
                     if (rolesMap.containsKey(id)) {
-                        rolesMap.get(id).add(new RolesVo(
-                            r.get(rolesTable.id), r.get(rolesTable.name)));
+                        rolesMap.get(id).add(vo);
                     } else {
                         List<RolesVo> list = new ArrayList<>();
-                        list.add(new RolesVo(
-                            r.get(rolesTable.id), r.get(rolesTable.name)));
+                        list.add(vo);
                         rolesMap.put(id, list);
                     }
                 });

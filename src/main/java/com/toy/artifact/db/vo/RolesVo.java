@@ -3,7 +3,7 @@ package com.toy.artifact.db.vo;
 public class RolesVo implements HasId {
     private Long id;
     private String name;
-    private String displayName;
+    private String display_name;
 
     public RolesVo(Long id, String name) {
         this.id = id;
@@ -26,11 +26,11 @@ public class RolesVo implements HasId {
         this.name = name;
     }
 
-    public String getDisplayName() {
-        return displayName;
+    public String getDisplay_name() {
+        return display_name;
     }
 
-    public void setDisplayName(String displayName) {
-        this.displayName = displayName;
+    public void setDisplay_name(String display_name) {
+        this.display_name = display_name;
     }
 }

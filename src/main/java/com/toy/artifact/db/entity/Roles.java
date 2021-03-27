@@ -12,6 +12,16 @@ public class Roles {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String displayName;
+
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
     public void setId(Long id) {
         this.id = id;
     }
